@@ -32,12 +32,12 @@ function LoadModule ($m) {
         }
     }
 }
-function GetRemoteVersion(){
+function GetRemoteData(){
     param(
         $uri
     )
-    $curl=Invoke-RestMethod -Uri $uri
-    return  $curl.tag_name
+    $info=Invoke-RestMethod -Uri $uri
+    return  $info
 }
 function IsLastestVersionInstalled{
     param(
@@ -54,30 +54,28 @@ function main(){
     $d=1;
     $documents=[environment]::getfolderpath("mydocuments")
     $modId | ForEach-Object {
-        #$modId
-        $versionGit=GetRemoteVersion ($PSItem[2])
+        $remoteData=GetRemoteData ($PSItem[2])
+        $versionGit=$remoteData.tag_name
         $prettyVersion=$versionGit;
         if ($PSItem[0] -eq 'cb84074d-5007-4207-b662-c35a5f7be240'){
             $versionGit=$versionGit.split('.');
             $versionGit=$($versionGit[0]+"."+$versionGit[1].PadLeft(2,"0")+"."+$versionGit[2])
         }
         $versionGit= $versionGit -replace '[^0-9]',""
-        #$versionGit
         $data=IsLastestVersionInstalled $PSItem[0] $versionGit
-        #Write-Host $PSItem[1] "Version disponible en ligne:"$prettyVersion
-        #$data
         if(!$data){
-            write-host $PSItem[1] $prettyVersion "non installÃ©, pensez Ã  mettre Ã  jour le mod ou Ã  l'installer"
+            write-host $PSItem[1] $prettyVersion "non installé, pensez à mettre à jour le mod ou à l'installer"
+            write-host "Voici le lien pour une installation hors steam : "$remoteData.html_url
             $d=0;
         }elseif($data.disabled  -ne 0 ){
-            Write-Host $PSItem[1] "est desactivÃ©"
+            Write-Host $PSItem[1] "est desactivé"
             $d=0;
         }                 
     }
     if($d -And $v){
-        "Les mods sont Ã  jour, bravo."
+        write-host "Les mods sont à jour, bravo."
     }
-    Start-sleep -s 15  
+    Read-Host -Prompt "Appuyer sur Entrée pour quitter."
 }
 LoadModule PSSQLite
 main
